@@ -13,17 +13,17 @@ This project classifies chest CT-scan images into lung cancer subtypes (adenocar
 ## Dataset
 
 A public, four-class chest CT-scan dataset from Kaggle (three cancer subtypes + normal), with meaningful class imbalance — a realistic constraint that shaped every modeling decision below.
-Dataset source: (https://www.kaggle.com/datasets/hanyhossam/chest-ctscan-images-dataset)
+Dataset source: [Chest CT-Scan Images (Kaggle)](https://www.kaggle.com/datasets/hanyhossam/chest-ctscan-images-dataset)
 
 ## Exploratory Data Analysis
 
-The four classes are meaningfully imbalanced — adenocarcinoma is the largest group, large-cell carcinoma the smallest — which shaped every modeling decision below (class weighting, and the baseline CNN's collapse onto the majority class).
+The four classes are meaningfully imbalanced — adenocarcinoma is the largest group, large-cell carcinoma the smallest — which shaped every modeling decision below (class weighting, and the baseline CNN's collapse into a single class).
 
-![Class distribution](class_distribution_aggregated_hist.png)
+![Class distribution aggregated histogram](class_distribution_aggregated_hist.png)
 
 Source images also varied widely in resolution, motivating a uniform resize to 224×224 before training.
 
-![Image resolution variability](image_resolution_variability_boxplot.png)
+![Image resolution variability boxplot](image_resolution_variability_boxplot.png)
 
 ## Approach — Three-Model Comparison
 
@@ -37,6 +37,8 @@ The three approaches were benchmarked head-to-head in `model_comparison.ipynb`, 
 
 The baseline failure was informative, not wasted: it demonstrated that a small imbalanced dataset couldn't support a from-scratch network, which is precisely what motivated the transfer-learning approach.
 
+![AutoML Params](AutoML_params.png)
+
 ## Results — Selected Model (EfficientNetB0)
 
 | Split | Accuracy | Macro-F1 | Macro-AUC |
@@ -44,13 +46,15 @@ The baseline failure was informative, not wasted: it demonstrated that a small i
 | Validation | 83.33% | 0.8459 | 0.968 |
 | Test | 85.71% | 0.8551 | 0.969 |
 
+![TEST confusion matrix](confusion_matrix.png)
+
 A macro-AUC of 0.969 on a multi-class clinical imaging task indicates strong separability across subtypes. The confusion matrix showed the model's main difficulty was distinguishing adenocarcinoma from large-cell carcinoma — an overlap that mirrors genuine diagnostic ambiguity radiologists themselves encounter, rather than an arbitrary model error.
 
 ## Explainability — Grad-CAM
 
 To move beyond a black-box prediction, I implemented Grad-CAM (gradient-weighted class activation mapping). The resulting heatmaps confirm the model concentrates attention on clinically relevant lung regions rather than background artifacts — supporting interpretability and trust.
 
-![Grad-CAM example] (gradcam_example.png)
+![Grad-CAM heatmap overlay](gradcam_example.png)
 
 ## Responsible Use
 
@@ -64,7 +68,8 @@ Python · TensorFlow / Keras · EfficientNetB0 (transfer learning) · AutoKeras 
 
 - `cancer_site_detection_cnn.ipynb` — final EfficientNetB0 model + Grad-CAM (deployed)
 - `model_comparison.ipynb` — head-to-head benchmark: baseline CNN vs AutoKeras vs EfficientNetB0
-- `gradcam_example.png`, `confusion_matrix.png`, `class_distribution.png`, `image_resolution.png`
+- `class_distribution_aggregated_hist.png`, `image_resolution_variability_boxplot.png` — EDA visuals
+- `confusion_matrix.png`, `gradcam_example.png`, `AutoML_params.png` — results & explainability visuals
 - `README.md`
 
 ## References
