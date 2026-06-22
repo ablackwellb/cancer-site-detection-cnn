@@ -15,13 +15,25 @@ This project classifies chest CT-scan images into lung cancer subtypes (adenocar
 A public, four-class chest CT-scan dataset from Kaggle (three cancer subtypes + normal), with meaningful class imbalance — a realistic constraint that shaped every modeling decision below.
 Dataset source: (https://www.kaggle.com/datasets/hanyhossam/chest-ctscan-images-dataset)
 
+## Exploratory Data Analysis
+
+The four classes are meaningfully imbalanced — adenocarcinoma is the largest group, large-cell carcinoma the smallest — which shaped every modeling decision below (class weighting, and the baseline CNN's collapse onto the majority class).
+
+![Class distribution](class_distribution_aggregated_hist.png)
+
+Source images also varied widely in resolution, motivating a uniform resize to 224×224 before training.
+
+![Image resolution variability](image_resolution_variability_boxplot.png)
+
 ## Approach — Three-Model Comparison
 
-| Model | Test Accuracy | Notes |
-|---|---|---|
-| Baseline CNN (from scratch) | ~30.6% | Collapsed under class imbalance — defaulted to the dominant class. Served as the benchmark that justified transfer learning. |
-| AutoKeras (AutoML / neural architecture search) | ~49% | Improved over baseline but lacked stability across runs. |
-| **EfficientNetB0 (transfer learning)** | **85.71%** | **Selected model** — fine-tuned via transfer learning. |
+| Model | Test Accuracy | Macro-F1 | Macro-AUC | Notes |
+|---|---|---|---|---|
+| Baseline CNN (from scratch) | 28.6% | 0.11 | — | Collapsed onto a single class — predicted one subtype for every image. AUC omitted as uninformative (unstable across runs). |
+| AutoKeras (AutoML / NAS) | 48.9% | 0.48 | 0.81 | Beat the baseline but remained limited. |
+| **EfficientNetB0 (transfer learning)** | **84.4%** | **0.83** | **0.97** | **Winner of the head-to-head benchmark** — then refined and deployed at 85.7% (see below). |
+
+The three approaches were benchmarked head-to-head in `model_comparison.ipynb`, where EfficientNetB0 won at 84.4% test accuracy. The final model was then refined (the training schedule in `cancer_site_detection_cnn.ipynb`) and deployed, reaching **85.7%** test accuracy — the figure reported below and on the live demo.
 
 The baseline failure was informative, not wasted: it demonstrated that a small imbalanced dataset couldn't support a from-scratch network, which is precisely what motivated the transfer-learning approach.
 
@@ -29,7 +41,7 @@ The baseline failure was informative, not wasted: it demonstrated that a small i
 
 | Split | Accuracy | Macro-F1 | Macro-AUC |
 |---|---|---|---|
-| Training | 83.33% | 0.8459 | 0.968 |
+| Validation | 83.33% | 0.8459 | 0.968 |
 | Test | 85.71% | 0.8551 | 0.969 |
 
 A macro-AUC of 0.969 on a multi-class clinical imaging task indicates strong separability across subtypes. The confusion matrix showed the model's main difficulty was distinguishing adenocarcinoma from large-cell carcinoma — an overlap that mirrors genuine diagnostic ambiguity radiologists themselves encounter, rather than an arbitrary model error.
@@ -50,9 +62,10 @@ Python · TensorFlow / Keras · EfficientNetB0 (transfer learning) · AutoKeras 
 
 ## Repository Contents
 
-- `cancer_site_detection_cnn.ipynb` — full training, evaluation, and Grad-CAM notebook
-- `gradcam_example.png` — sample explainability heatmap
-- `README.md` — this file
+- `cancer_site_detection_cnn.ipynb` — final EfficientNetB0 model + Grad-CAM (deployed)
+- `model_comparison.ipynb` — head-to-head benchmark: baseline CNN vs AutoKeras vs EfficientNetB0
+- `gradcam_example.png`, `confusion_matrix.png`, `class_distribution.png`, `image_resolution.png`
+- `README.md`
 
 ## References
 
